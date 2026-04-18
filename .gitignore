@@ -11,7 +11,7 @@ env/
 ENV/
 .venv/
 
-# Environment Variables (⚠️ 절대 커밋 금지!)
+# Environment Variables 
 .env
 .env.local
 *.env
