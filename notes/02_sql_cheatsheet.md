@@ -91,6 +91,12 @@ LEFT JOIN 테이블B b ON a.key = b.key;
 - ON 조건 빠뜨리면 Cartesian Product (행 수 폭발)
 - 같은 컬럼명 있으면 `테이블.컬럼` 으로 구분
 
+### JOIN 실행 순서
+- FROM + JOIN이 가장 먼저 (WHERE보다 먼저)
+- LEFT JOIN + WHERE 조건 시 주의:
+    - WHERE에 걸면 INNER JOIN처럼 동작 (NULL 제거됨)
+    - LEFT JOIN 의도 유지하려면 ON 절에 조건 포함
+
 ---
 
 ## 5. 서브쿼리 (Subquery)
@@ -184,8 +190,55 @@ SELECT name FROM group_b;
 
 ## 8. Window Function (오늘 배울 것 - 빈 칸으로 두기)
 
-(오늘 채워나갈 예정)
+### 개념
+- 각 행을 유지하면서 옆에 "그룹 기반 집계값" 추가
+- GROUP BY는 행을 줄이지만, Window는 행 수 유지
 
+### 기본 문법
+```sql
+함수() OVER (
+    PARTITION BY 그룹기준
+    ORDER BY 정렬기준
+)
+```
+- PARTITION BY : GROUP BY와 비슷한 역할 (생략 가능)
+- ORDER BY : 그룹 안에서의 순서 (순위/누적합/LAG 등에 필요)
+
+### 주요 함수
+| 함수 | 용도 |
+|------|------|
+| RANK() | 순위 (동점 같은 등수, 다음 건너뜀: 1,2,3.4) |
+| DENSE_RANK() | 순위 (동점 같은 등수, 건너뛰지 않음: 1,2,2.3) |
+| ROW_NUMBER() | 단순 순번 (동점 무시: 1,2,3,4) |
+| SUM() OVER | 누적합 또는 그룹 합계 |
+| AVG() OVER | 그룹 평균 |
+| LAG(컬럼, n) | n번째 이전 행의 값 (첫 행은 NULL) |
+| LEAD(컬럼, n) | n번째 다음 행의 값 |
+
+### 주의
+- WHERE 절에서 Window Function 직접 사용 불가
+- -> CTE 또는 FROM 서브쿼리로 감싸야 함
+
+### 실무 패턴
+- "부서별 1등" -> RANK() + WHERE rnk = 1
+- "이번 달 vs 지난 달" -> LAG() 활용
+- "누적 매출" -> SUM() OVER (ORDER BY date)
+- "최근 N일 이동평균" -> AVG() OVER (ORDER BY date ROWS BETWEEN)
+
+### Window 함수 사용 위치
+- SELECT 절
+- ORDER BY 절 (잘 안씀)
+- x(안되는 것) WHERE, HAVING, GROUP BY 절 -> CTE로 감싸야 함
+
+### Window 함수 + WHERE 필터링 공식
+항상 CTE 또는 서브쿼리 감싸기:
+
+```sql
+WITH ranked AS (
+    SELECT ..., RANK() OVER (...) AS rnk FROM ...
+)
+SELECT * FROM ranked WHERE rnk = 1;
+```
 ---
 
 ## 9. 내가 헷갈렸던 것 / 까먹은 것
