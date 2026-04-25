@@ -188,7 +188,7 @@ SELECT name FROM group_b;
 
 ---
 
-## 8. Window Function (오늘 배울 것 - 빈 칸으로 두기)
+## 8. Window Function 
 
 ### 개념
 - 각 행을 유지하면서 옆에 "그룹 기반 집계값" 추가
